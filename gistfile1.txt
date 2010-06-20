@@ -1,8 +1,4 @@
-#
-# Automatically generated make config: don't edit
-# Linux kernel version: 2.6.26
-# Tue Mar  9 16:47:04 2010
-#
+# APPEND_VERSION='-2-486'
 # CONFIG_64BIT is not set
 CONFIG_X86_32=y
 # CONFIG_X86_64 is not set
