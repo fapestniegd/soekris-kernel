@@ -1,0 +1,59 @@
+################################################################################
+# Install Cfengine
+################################################################################
+wget http://packages.lab.eftdomain.net/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
+dpkg -i cfengine-community_3.2.1-1_debian6_i386.deb
+wget -qO - cfengine.lab/inputs | bash
+cf-agent -K
+
+################################################################################
+# Get dependencies
+################################################################################
+export http_proxy=http://squid:3128
+apt-get update
+apt-get install debian-keyring
+apt-get upgrade
+apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
+                   tk libncurses5-dev fakeroot git-core build-essential \
+                   zlib1g-dev
+
+################################################################################
+# Get the kernel
+################################################################################
+export KERNEL=2.6.32
+export CONFIG_GIST="446120"
+export BUILD_ROOT="/opt/local/src/"
+
+if [ ! -f /usr/src/linux-source-${KERNEL}.tar.bz2 ]; then
+    apt-get install -y --reinstall linux-source-${KERNEL}
+fi
+if [ ! -d ${BUILD_ROOT} ]; then
+    mkdir -p "${BUILD_ROOT}"
+fi
+if [ ! -d ${BUILD_ROOT}/linux-source-${KERNEL} ]; then
+    (cd ${BUILD_ROOT}; tar xvjf /usr/src/linux-source-${KERNEL}.tar.bz2)
+fi
+if [ ! -h ${BUILD_ROOT}/linux ]; then
+    (cd ${BUILD_ROOT}; ln -s linux-source-${KERNEL} linux)
+fi
+
+################################################################################
+# Set up the source .config from a gist
+################################################################################
+export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
+( cd ${GISTROOT} ; git clone git://gist.github.com/${CONFIG_GIST}.git )
+cp ${GISTROOT}/${CONFIG_GIST}/gistfile1.txt ${BUILD_ROOT}/.config
+(cd $BUILD_ROOT/linux; make oldconfig)
+if [ ! -z "${GISTROOT}" ]; then rm -fr "${GISTROOT}"; fi
+
+################################################################################
+# BUILDING THE PACKAGE
+################################################################################
+APPEND_VERSION=$(
+                  grep "# *APPEND_VERSION *= *" ${BUILD_ROOT}/.config |\
+                  sed -e 's/#.*APPEND_VERSION *=//' -e "s/'//g"
+                )
+export APPEND_VERSION
+( cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg clean )
+(cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
+
