@@ -1,3 +1,4 @@
+# APPEND_VERSION='-net5501'
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32
