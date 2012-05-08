@@ -1,7 +1,7 @@
 ################################################################################
 # Install Cfengine
 ################################################################################
-dpkg -l | grep -q "cfengine-community" \
+dpkg -l | grep -q "cfengine-community" || \
   (
     if [ ! -f cfengine-community_3.2.1-1_debian6_i386.deb ]; then
         wget http://packages/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
