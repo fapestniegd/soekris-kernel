@@ -1,3 +1,6 @@
+#!/bin/bash
+export PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+BASEDIR=$(cd $(dirname $0); pwd)
 ################################################################################
 # Install Cfengine
 ################################################################################
@@ -14,8 +17,7 @@ dpkg -l | grep -q "cfengine-community" || \
 ################################################################################
 # Get dependencies
 ################################################################################
-export http_proxy=http://squid:3128
-apt-get update
+apt-get update || export http_proxy=http://squid:3128 && apt-get update
 apt-get install debian-keyring
 apt-get upgrade
 apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
@@ -25,52 +27,56 @@ apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
 ################################################################################
 # Get the kernel
 ################################################################################
-export KERNEL=2.6.32
-export CONFIG_GIST="446120"
-export BUILD_ROOT="/opt/local/src/"
-
-if [ ! -f /usr/src/linux-source-${KERNEL}.tar.bz2 ]; then
-    apt-get install -y --reinstall linux-source-${KERNEL}
+# export KERNEL=2.6.32
+# export CONFIG_GIST="446120"
+# export BUILD_ROOT="/opt/local/src/"
+# 
+# if [ ! -f /usr/src/linux-source-${KERNEL}.tar.bz2 ]; then
+#     apt-get install -y --reinstall linux-source-${KERNEL}
+# fi
+# if [ ! -d ${BUILD_ROOT} ]; then
+#     mkdir -p "${BUILD_ROOT}"
+# fi
+# if [ ! -d ${BUILD_ROOT}/linux-source-${KERNEL} ]; then
+#     (cd ${BUILD_ROOT}; tar xvjf /usr/src/linux-source-${KERNEL}.tar.bz2)
+# fi
+# if [ ! -h ${BUILD_ROOT}/linux ]; then
+#     (cd ${BUILD_ROOT}; ln -s linux-source-${KERNEL} linux)
+# fi
+# 
+# ################################################################################
+# # Set up the source .config from a gist
+# ################################################################################
+# export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
+# ( cd ${GISTROOT} ; git clone git://gist.github.com/${CONFIG_GIST}.git )
+# cp ${GISTROOT}/${CONFIG_GIST}/config ${BUILD_ROOT}/.config
+# (cd $BUILD_ROOT/linux; make oldconfig)
+# if [ ! -z "${GISTROOT}" ]; then rm -fr "${GISTROOT}"; fi
+# 
+# ################################################################################
+# # BUILDING THE PACKAGE
+# ################################################################################
+# APPEND_VERSION=$(
+#                   grep "# *APPEND_VERSION *= *" ${BUILD_ROOT}/.config |\
+#                   sed -e 's/#.*APPEND_VERSION *=//' -e "s/'//g"
+#                 )
+# export APPEND_VERSION
+# ( cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg clean )
+# (cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
+# 
+# 
+# ################################################################################
+# # Build the Kernel
+# ################################################################################
+[ ! -d  /var/cache/git] && mkdir -p /var/cache/git
+if [ ! -d  /var/cache/git/aufs2-2.6 ]; then
+  ( cd /var/cache/git; git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git )
+else 
+  ( cd /var/cache/git/aufs2-2.6; git pull )
 fi
-if [ ! -d ${BUILD_ROOT} ]; then
-    mkdir -p "${BUILD_ROOT}"
-fi
-if [ ! -d ${BUILD_ROOT}/linux-source-${KERNEL} ]; then
-    (cd ${BUILD_ROOT}; tar xvjf /usr/src/linux-source-${KERNEL}.tar.bz2)
-fi
-if [ ! -h ${BUILD_ROOT}/linux ]; then
-    (cd ${BUILD_ROOT}; ln -s linux-source-${KERNEL} linux)
-fi
+( cd /var/cache/git/aufs2-2.6; git checkout -b aufs2.1-39 origin/aufs2.1-39 )
+( cd /var/cache/git/aufs2-2.6; fakeroot make-kpkg clean )
+cp "${BASEDIR}/config-2.6.39" /var/cache/git/aufs2-2.6/.config
+( cd /var/cache/git/aufs2-2.6; fakeroot make-kpkg --append-to-version '' --revision 1 kernel_image )
 
-################################################################################
-# Set up the source .config from a gist
-################################################################################
-export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
-( cd ${GISTROOT} ; git clone git://gist.github.com/${CONFIG_GIST}.git )
-cp ${GISTROOT}/${CONFIG_GIST}/config ${BUILD_ROOT}/.config
-(cd $BUILD_ROOT/linux; make oldconfig)
-if [ ! -z "${GISTROOT}" ]; then rm -fr "${GISTROOT}"; fi
-
-################################################################################
-# BUILDING THE PACKAGE
-################################################################################
-APPEND_VERSION=$(
-                  grep "# *APPEND_VERSION *= *" ${BUILD_ROOT}/.config |\
-                  sed -e 's/#.*APPEND_VERSION *=//' -e "s/'//g"
-                )
-export APPEND_VERSION
-( cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg clean )
-(cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
-
-
-################################################################################
-# Build the Kernel
-################################################################################
-(
-  cd /var/cache/git
-  git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git
-  cd /var/cache/git/aufs2-2.6
-  git checkout -b aufs2.1-39 origin/aufs2.1-39
-)
-
-git clone git://git.c3sl.ufpr.br/aufs/aufs2-util.git
+#git clone git://git.c3sl.ufpr.br/aufs/aufs2-util.git
