@@ -1,3 +1,4 @@
 export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
 ( cd ${GISTROOT} ; git clone git://github.com/fapestniegd/soekris-kernel.git)
 [ -x ${GISTROOT}/soekris-kernel/script ] && ${GISTROOT}/soekris-kernel/script
+[ -d "${GISTROOT}" ] && /bin -rm -fr "${GISTROOT}"
