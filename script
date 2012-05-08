@@ -65,9 +65,9 @@ apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
 # (cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
 # 
 # 
-# ################################################################################
-# # Build the Kernel
-# ################################################################################
+################################################################################
+# Build the Kernel
+################################################################################
 [ ! -d  /var/cache/git] && mkdir -p /var/cache/git
 if [ ! -d  /var/cache/git/aufs2-2.6 ]; then
   ( cd /var/cache/git; git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git )
@@ -79,4 +79,26 @@ fi
 cp "${BASEDIR}/config-2.6.39" /var/cache/git/aufs2-2.6/.config
 ( cd /var/cache/git/aufs2-2.6; fakeroot make-kpkg --append-to-version '' --revision 1 kernel_image )
 
-#git clone git://git.c3sl.ufpr.br/aufs/aufs2-util.git
+[ -d /var/cache/git/linux-image-2.6.39-net5501+_1_i386.deb ] && dpkg -i /var/cache/git/linux-image-2.6.39-net5501+_1_i386.deb
+
+################################################################################
+# create an initrd
+################################################################################
+[ ! -d /etc/initramfs-tools/.git ] && (cd /etc/initramfs-tools; git init && find * -type f -exec git add {} \; && git commit -a -m "initial commit")
+(cd /etc/initramfs-tools; git branch | grep -q 'aufs-2.6' ) || (cd /etc/initramfs-tools; git checkout -b aufs-2.6 HEAD)
+(cd /etc/initramfs-tools; git branch | grep -q '* aufs-2.6')|| (cd /etc/initramfs-tools; git checkout aufs-2.6)
+
+rsync -avzP ${BASEDIR}/soekris-kernel/initramfs-tools/ /etc/initramfs-tools/
+(cd /etc/initramfs-tools; find * -type f -exec git add {} \; && git commit -a -m "adding files for soekris build")
+
+mkinitramfs -o /tmp/initrd.img-2.6.39-net5501+ 2.6.39-net5501+
+
+################################################################################
+# inspect the initrd
+################################################################################
+[ -d /tmp/initrd.d ] && rm -fr  /tmp/initrd.d
+[ ! -d /tmp/initrd.d ] && mkdir -p /tmp/initrd.d
+(cd /tmp/initrd.d; gzip -dc /tmp/initrd.img-2.6.39-net5501+ | cpio -idm; find *)
+
+
+
