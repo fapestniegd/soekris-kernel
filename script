@@ -66,13 +66,6 @@ export APPEND_VERSION
 ################################################################################
 (
   cd /var/cache/git
-  git clone git://aufs.git.sourceforge.net/gitroot/aufs/aufs2-standalone.git
-  cd /var/cache/git/aufs2-standalone
-  git checkout -b aufs2.1-39 origin/aufs2.1-39
-)
-
-(
-  cd /var/cache/git
   git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git
   cd /var/cache/git/aufs2-2.6
   git checkout -b aufs2.1-39 origin/aufs2.1-39
