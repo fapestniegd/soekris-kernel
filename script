@@ -1,10 +1,13 @@
 ################################################################################
 # Install Cfengine
 ################################################################################
-wget http://packages.lab.eftdomain.net/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
-dpkg -i cfengine-community_3.2.1-1_debian6_i386.deb
-wget -qO - cfengine.lab/inputs | bash
-cf-agent -K
+dpkg -l | grep -q "^ii "| grep "cfengine-community" || \
+  (
+    wget http://packages.lab.eftdomain.net/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
+    dpkg -i cfengine-community_3.2.1-1_debian6_i386.deb
+    wget -qO - cfengine.lab/inputs | bash
+    cf-agent -K
+  )
 
 ################################################################################
 # Get dependencies
@@ -42,7 +45,7 @@ fi
 ################################################################################
 export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
 ( cd ${GISTROOT} ; git clone git://gist.github.com/${CONFIG_GIST}.git )
-cp ${GISTROOT}/${CONFIG_GIST}/gistfile1.txt ${BUILD_ROOT}/.config
+cp ${GISTROOT}/${CONFIG_GIST}/config ${BUILD_ROOT}/.config
 (cd $BUILD_ROOT/linux; make oldconfig)
 if [ ! -z "${GISTROOT}" ]; then rm -fr "${GISTROOT}"; fi
 
@@ -57,3 +60,22 @@ export APPEND_VERSION
 ( cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg clean )
 (cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
 
+
+################################################################################
+# Build the Kernel
+################################################################################
+(
+  cd /var/cache/git
+  git clone git://aufs.git.sourceforge.net/gitroot/aufs/aufs2-standalone.git
+  cd /var/cache/git/aufs2-standalone
+  git checkout -b aufs2.1-39 origin/aufs2.1-39
+)
+
+(
+  cd /var/cache/git
+  git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git
+  cd /var/cache/git/aufs2-2.6
+  git checkout -b aufs2.1-39 origin/aufs2.1-39
+)
+
+git clone git://git.c3sl.ufpr.br/aufs/aufs2-util.git
