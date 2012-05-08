@@ -1,9 +1,11 @@
 ################################################################################
 # Install Cfengine
 ################################################################################
-dpkg -l | grep -q "^ii "| grep "cfengine-community" || \
+dpkg -l | grep -q "cfengine-community" \
   (
-    wget http://packages.lab.eftdomain.net/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
+    if [ ! -f cfengine-community_3.2.1-1_debian6_i386.deb ]; then
+        wget http://packages/working/debian-squeeze-os-i386/cfengine-community_3.2.1-1_debian6_i386.deb
+    fi
     dpkg -i cfengine-community_3.2.1-1_debian6_i386.deb
     wget -qO - cfengine.lab/inputs | bash
     cf-agent -K
