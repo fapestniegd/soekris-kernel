@@ -22,7 +22,7 @@ apt-get install debian-keyring
 apt-get upgrade
 apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
                    tk libncurses5-dev fakeroot git-core build-essential \
-                   zlib1g-dev
+                   zlib1g-dev cryptsetup
 
 ################################################################################
 # Get the kernel
