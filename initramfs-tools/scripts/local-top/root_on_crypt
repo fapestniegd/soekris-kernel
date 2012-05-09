@@ -72,7 +72,7 @@ if [ -f "/cryptkeys/boot/force_secure" ]; then
 fi
 
 if [ -f /cryptkeys/boot/wifi_credentials ]; then
-    /bin/cp /cryptkeys/boot/wifi_credentials /dev/shm/wifi_credentials
+    cp /cryptkeys/boot/wifi_credentials /dev/shm/wifi_credentials
 fi
 
 /bin/umount /cryptkeys/boot
