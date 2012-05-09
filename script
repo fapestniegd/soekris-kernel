@@ -1,5 +1,6 @@
 #!/bin/bash
 export PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
 BASEDIR=$(cd $(dirname $0); pwd)
 ################################################################################
 # Install Cfengine
@@ -24,66 +25,54 @@ apt-get install -y gcc kernel-package linux-source-${KERNEL} libc6-dev \
                    tk libncurses5-dev fakeroot git-core build-essential \
                    zlib1g-dev cryptsetup
 
-################################################################################
-# Get the kernel
-################################################################################
-# export KERNEL=2.6.32
-# export CONFIG_GIST="446120"
-# export BUILD_ROOT="/opt/local/src/"
-# 
-# if [ ! -f /usr/src/linux-source-${KERNEL}.tar.bz2 ]; then
-#     apt-get install -y --reinstall linux-source-${KERNEL}
-# fi
-# if [ ! -d ${BUILD_ROOT} ]; then
-#     mkdir -p "${BUILD_ROOT}"
-# fi
-# if [ ! -d ${BUILD_ROOT}/linux-source-${KERNEL} ]; then
-#     (cd ${BUILD_ROOT}; tar xvjf /usr/src/linux-source-${KERNEL}.tar.bz2)
-# fi
-# if [ ! -h ${BUILD_ROOT}/linux ]; then
-#     (cd ${BUILD_ROOT}; ln -s linux-source-${KERNEL} linux)
-# fi
-# 
-# ################################################################################
-# # Set up the source .config from a gist
-# ################################################################################
-# export GISTROOT=$(mktemp -d /tmp/GIST.XXXX)
-# ( cd ${GISTROOT} ; git clone git://gist.github.com/${CONFIG_GIST}.git )
-# cp ${GISTROOT}/${CONFIG_GIST}/config ${BUILD_ROOT}/.config
-# (cd $BUILD_ROOT/linux; make oldconfig)
-# if [ ! -z "${GISTROOT}" ]; then rm -fr "${GISTROOT}"; fi
-# 
-# ################################################################################
-# # BUILDING THE PACKAGE
-# ################################################################################
-# APPEND_VERSION=$(
-#                   grep "# *APPEND_VERSION *= *" ${BUILD_ROOT}/.config |\
-#                   sed -e 's/#.*APPEND_VERSION *=//' -e "s/'//g"
-#                 )
-# export APPEND_VERSION
-# ( cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg clean )
-# (cd ${BUILD_ROOT}/linux ;fakeroot make-kpkg --append-to-version ${APPEND_VERSION} --revision 1 kernel_image )
-# 
-# 
-################################################################################
-# Build the Kernel
-################################################################################
-[ ! -d  /var/cache/git] && mkdir -p /var/cache/git
-if [ ! -d  /var/cache/git/aufs2-2.6 ]; then
-  ( cd /var/cache/git; git clone git://git.c3sl.ufpr.br/aufs/aufs2-2.6.git )
-else 
-  ( cd /var/cache/git/aufs2-2.6; git pull )
-fi
-( cd /var/cache/git/aufs2-2.6; git checkout -b aufs2.1-39 origin/aufs2.1-39 )
-( cd /var/cache/git/aufs2-2.6; fakeroot make-kpkg clean )
-cp "${BASEDIR}/config-2.6.39" /var/cache/git/aufs2-2.6/.config
-( cd /var/cache/git/aufs2-2.6; fakeroot make-kpkg --append-to-version '' --revision 1 kernel_image )
+# BASEDIR='/var/cache/git'
+KERNELVERSION=2.6.35.13
+AUFSBRANCH=aufs2.2-35
 
-[ -d /var/cache/git/linux-image-2.6.39-net5501+_1_i386.deb ] && dpkg -i /var/cache/git/linux-image-2.6.39-net5501+_1_i386.deb
+################################################################################
+# get linux
+#
+if [ ! -f /usr/src/linux-${KERNELVERSION}.tar.bz2 ]; then
+    wget -O /usr/src/linux-${KERNELVERSION}.tar.bz2 http://www.kernel.org/pub/linux/kernel/v2.6/longterm/v2.6.35/linux-${KERNELVERSION}.tar.bz2
+fi
+(cd /usr/src/linux; tar xvjf linux-${KERNELVERSION}.tar.bz2)
+[ -h /usr/src/linux ] && unlink /usr/src/linux
+[ ! -h /usr/src/linux ] && (cd /usr/src; ln -s linux-${KERNELVERSION} linux)
+
+################################################################################
+# get aufs
+#
+[ ! -d  /var/cache/git ] && mkdir -p /var/cache/git
+if [ ! -d  /var/cache/git/aufs2-standalone ];then
+    ( cd /var/cache/git; git clone /var/cacgit://git.c3sl.ufpr.br/aufs/aufs2-standalone.git )
+else
+    ( cd /var/cache/git/aufs2-standalone; git pull)
+fi
+( cd /var/cache/git/aufs2-standalone; git checkout -b ${AUFSBRANCH} origin/${AUFSBRANCH} )
+
+################################################################################
+# patch linux with aufs
+#
+( cd /usr/src/linux; patch -p1 < /var/cache/git/aufs2-standalone/aufs2-kbuild.patch )
+( cd /usr/src/linux; patch -p1 < /var/cache/git/aufs2-standalone/aufs2-base.patch )
+( cd /usr/src/linux; patch -p1 < /var/cache/git/aufs2-standalone/proc_map.patch )
+( cd /usr/src/linux; patch -p1 < /var/cache/git/aufs2-standalone/aufs2-standalone.patch )
+rsync -avzP /var/cache/git/aufs2-standalone/Documentation/   /usr/src/linux/Documentation/
+rsync -avzP /var/cache/git/aufs2-standalone/fs/              /usr/src/linux/fs/
+cp /var/cache/git/aufs2-standalone/include/linux/aufs_type.h /usr/src/linux/include/linux/aufs_type.h
+
+################################################################################
+# build the kernel package and install it
+#
+( cd /usr/src/linux; fakeroot make-kpkg clean )
+cp ${BASEDIR}/soekris-kernel/config-${KERNELVERSION} /usr/src/linux/.config
+( cd /usr/src/linux ; fakeroot make-kpkg --append-to-version '' --revision 1 kernel_image )
+dpkg -i /usr/src/linux-image-${KEFNELVERSION}-net5501_1_i386.deb
+
 
 ################################################################################
 # create an initrd
-################################################################################
+#
 [ ! -d /etc/initramfs-tools/.git ] && (cd /etc/initramfs-tools; git init && find * -type f -exec git add {} \; && git commit -a -m "initial commit")
 (cd /etc/initramfs-tools; git branch | grep -q 'aufs-2.6' ) || (cd /etc/initramfs-tools; git checkout -b aufs-2.6 HEAD)
 (cd /etc/initramfs-tools; git branch | grep -q '* aufs-2.6')|| (cd /etc/initramfs-tools; git checkout aufs-2.6)
@@ -91,14 +80,14 @@ cp "${BASEDIR}/config-2.6.39" /var/cache/git/aufs2-2.6/.config
 rsync -avzP ${BASEDIR}/soekris-kernel/initramfs-tools/ /etc/initramfs-tools/
 (cd /etc/initramfs-tools; find * -type f -exec git add {} \; && git commit -a -m "adding files for soekris build")
 
-mkinitramfs -o /tmp/initrd.img-2.6.39-net5501+ 2.6.39-net5501+
+mkinitramfs -o /tmp/initrd.img-${KERNELVERSION}-net5501 ${KERNELVERSION}-net5501
 
 ################################################################################
 # inspect the initrd
 ################################################################################
 [ -d /tmp/initrd.d ] && rm -fr  /tmp/initrd.d
 [ ! -d /tmp/initrd.d ] && mkdir -p /tmp/initrd.d
-(cd /tmp/initrd.d; gzip -dc /tmp/initrd.img-2.6.39-net5501+ | cpio -idm; find *)
+(cd /tmp/initrd.d; gzip -dc /tmp/initrd.img-${KERNELVERSION}-net5501 | cpio -idm; find *)
 
 
 
