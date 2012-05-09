@@ -40,7 +40,6 @@ case "$(uname -r)" in
     ;;
 esac
 
-#/bin/sh
 
 # start all crypto volumes in /cryptkeys/boot/crypttab
 if [ ! -f /cryptkeys/boot/crypttab ]; then 
@@ -54,6 +53,8 @@ else
         done
 fi
 /bin/umount /cryptkeys/boot
+
+/bin/sh
 
 #mount /dev/mapper/crypt_dev_hda2 /root
 #ls /root
