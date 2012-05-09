@@ -33,7 +33,7 @@ sleep 10; # it takes a bit for sda to come online...
 # start all crypto volumes in /cryptkeys/boot/crypttab
 if [ ! -f /cryptkeys/boot/crypttab ]; then 
     echo "could not read /cryptkeys/boot/crypttab"
-    #/bin/sh
+    /bin/sh
     reboot; 
 else
     /bin/cat /cryptkeys/boot/crypttab | \
