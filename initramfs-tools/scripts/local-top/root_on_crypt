@@ -40,15 +40,14 @@ case "$(uname -r)" in
     ;;
 esac
 
-/bin/sh
+#/bin/sh
 
 # start all crypto volumes in /cryptkeys/boot/crypttab
 if [ ! -f /cryptkeys/boot/crypttab ]; then 
     echo "could not read /cryptkeys/boot/crypttab"
     reboot; 
 else
-    /bin/cat /cryptkeys/boot/crypttab | \
-        awk '{print "cryptsetup --key-file /cryptkeys"$3" luksOpen "$2" "$1}'| \
+    /bin/cat /cryptkeys/boot/crypttab|awk '{print "cryptsetup --key-file /cryptkeys"$3" luksOpen "$2" "$1}'| \
         while read READY_DEVICE ; do
             echo "${READY_DEVICE}"
             ${READY_DEVICE}
