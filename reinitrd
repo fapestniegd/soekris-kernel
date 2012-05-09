@@ -1,0 +1,11 @@
+#!/bin/bash
+KERNELVERSION=2.6.35.13-net5501
+(cd /var/cache/git/soekris-kernel/; git pull) ; 
+rsync -avzP /var/cache/git/soekris-kernel/initramfs-tools/scripts/ /etc/initramfs-tools/scripts/; 
+mkinitramfs -o /tmp/initrd.img-${KERNELVERSION} ${KERNELVERSION};
+[ -d /tmp/initrd.d ] && /bin/rm -fr /tmp/initrd.d; 
+mkdir /tmp/initrd.d; 
+(cd /tmp/initrd.d; gzip -dc /tmp/initrd.img-${KERNELVERSION}| cpio -idm);
+scp /boot/vmlinuz-${KERNELVERSION} /tmp/initrd.img-${KERNELVERSION} root@newton:/opt/local/tftpboot/pxelinux.kernels/squeeze/net5501/
+echo $?
+

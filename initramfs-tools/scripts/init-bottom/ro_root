@@ -12,7 +12,7 @@ esac
 
 /bin/sh
 
-/sbin/depmod -a
+#/sbin/depmod -a
 /sbin/modprobe aufs
 
 # Boot normally when the user selects single user mode.
@@ -27,7 +27,7 @@ rw_mount_point="${rootmnt%/}.rw"
 mkdir "${ro_mount_point}" "${rw_mount_point}"
 
 # Move the already-mounted root filesystem to the ro mount point:
-mount --move "${rootmnt}" "${ro_mount_point}"
+mount -o move "${rootmnt}" "${ro_mount_point}"
 
 # Mount the read/write filesystem:
 mount -t tmpfs root.rw "${rw_mount_point}"
