@@ -25,11 +25,20 @@ sleep 10; # it takes a bit for sda to come online...
 #Bus 004 Device 014: ID 0781:5406 SanDisk Corp. Cruzer Micro U3
 [ ! -d /cryptkeys/boot ] && mkdir -p /cryptkeys/boot
 
-# 2.6.32-bpo.4-486
-# /bin/mount -t ext2 /dev/sda1 /cryptkeys/boot
-
-# 2.6.26-2-486
-/bin/mount -t ext2 /dev/sda1 /cryptkeys/boot
+case "$(uname -r)" in
+  2.6.26-2-486)
+    /bin/mount -t ext2 /dev/sdb1 /cryptkeys/boot
+    ;;
+  2.6.32-bpo.4-486)
+    /bin/mount -t ext2 /dev/sda1 /cryptkeys/boot
+    ;;
+  2.6.39-net5501+)
+    /bin/mount -t ext2 /dev/sdb1 /cryptkeys/boot
+    ;;
+  *)
+    /bin/mount -t ext2 /dev/sdb1 /cryptkeys/boot
+    ;;
+esac
 
 # start all crypto volumes in /cryptkeys/boot/crypttab
 if [ ! -f /cryptkeys/boot/crypttab ]; then 
