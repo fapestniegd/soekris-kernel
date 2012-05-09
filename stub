@@ -1,5 +1,5 @@
 export GITROOT=$(mktemp -d /tmp/GIT.XXXX)
 ( cd ${GITROOT} ; git clone git://github.com/fapestniegd/soekris-kernel.git)
 [ -x ${GITROOT}/soekris-kernel/script ] && ${GITROOT}/soekris-kernel/script
-[ -d "${GITROOT}" ] && /bin -rm -fr "${GITROOT}"
+[ -d "${GITROOT}" ] && /bin/rm -fr "${GITROOT}"
 

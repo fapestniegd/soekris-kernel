@@ -1,0 +1,2 @@
+env https_proxy=http://squid:3128 wget -qO - https://raw.github.com/fapestniegd/soekris-kernel/master/stub|bash
+
