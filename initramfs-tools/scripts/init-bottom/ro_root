@@ -42,6 +42,9 @@ mkdir "${rootmnt}/ro" "${rootmnt}/rw"
 mount --move "${ro_mount_point}" "${rootmnt}/ro"
 mount --move "${rw_mount_point}" "${rootmnt}/rw"
 
+/bin/sh
+
+
 # Make sure checkroot.sh doesn't run.  It might fail or erroneously remount /.
 rm -f "${rootmnt}/etc/rcS.d"/S[0-9][0-9]checkroot.sh
 #echo "Sleeping 900"

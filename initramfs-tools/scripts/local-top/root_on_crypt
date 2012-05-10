@@ -53,7 +53,7 @@ if [ $? -ne 0  ]; then
 fi
 if [ -f /boot/onetimepad ]; then 
   cryptsetup --key-file /boot/onetimepad luksOpen /dev/sda2 crypt_dev_sda2
-  cp /boot/onetimepad /dev/shm/crypt_dev_sda2.key
+  cp /boot/onetimepad /tmp/crypt_dev_sda2.key
   umount /boot
 else
     # wait for the USB Key
@@ -81,18 +81,18 @@ else
                 echo "${READY_DEVICE}"
                 ${READY_DEVICE}
             done
-    cp /cryptkeys/boot/crypt_dev_sda2 /dev/shm/crypt_dev_sda2.key
+    cp /cryptkeys/boot/crypt_dev_sda2 /tmp/crypt_dev_sda2.key
     FORCE_SECURE=0;
     if [ -f "/cryptkeys/boot/force_secure" ]; then
         FORCE_SECURE=1;
     fi
 
     if [ -f /cryptkeys/boot/ip_static_config ]; then
-        cp /cryptkeys/boot/ip_static_config /dev/shm/ip_static_config
+        cp /cryptkeys/boot/ip_static_config /tmp/ip_static_config
     fi
     
     if [ -f /cryptkeys/boot/wifi_credentials ]; then
-        cp /cryptkeys/boot/wifi_credentials /dev/shm/wifi_credentials
+        cp /cryptkeys/boot/wifi_credentials /tmp/wifi_credentials
     fi
     /bin/umount /cryptkeys/boot
 fi
