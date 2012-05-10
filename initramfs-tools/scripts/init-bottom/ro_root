@@ -10,8 +10,6 @@ prereqs)
   ;;
 esac
 
-/bin/sh
-
 #/sbin/depmod -a
 /sbin/modprobe aufs
 
