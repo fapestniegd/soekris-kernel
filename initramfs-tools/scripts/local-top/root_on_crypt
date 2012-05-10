@@ -46,44 +46,54 @@ FLASH_ERROR=$!
 log_begin_msg "Starting root-on-crypt"
 /bin/sh
 # look for our one-time-reboot
+if [ ! -d /boot ] ;then mkdir -p /boot; fi
+mount | grep '/boot'
+if [ $? -ne 0  ]; then
+  mount -t ext2 /dev/sda1 /boot
+fi
+if [ -f /boot/onetimepad ]; then 
+  cryptsetup --key-file /boot/onetimepad luksOpen /dev/sda2 crypt_dev_sda2
+else
+    # wait for the USB Key
+    /sbin/modprobe usb-storage
+    while [ ! -b /dev/sdb ];do
+        echo "Waiting for USB Key.";
+        echo 2 > /tmp/current_error_level
+        sleep 1 ;
+    done
+    echo 0 > /dev/error_led
+    kill -9 $FLASH_ERROR
+    ################################################################################
+    # wait until it mounts
+    if [ ! -d /cryptkeys/boot ]; then mkdir -p /cryptkeys/boot; fi
+    while [ ! -f /cryptkeys/boot/crypttab ]; do
+        /bin/mount -t ext2 /dev/sdb1 /cryptkeys/boot || echo "could not read /cryptkeys/boot/crypttab"
+    done
+    ################################################################################
+    # decrypt the compact flash
+    /sbin/modprobe dm_mod
+    
+    /bin/cat /cryptkeys/boot/crypttab | \
+    awk '{print "cryptsetup --key-file /cryptkeys"$3" luksOpen "$2" "$1}'| \
+        while read READY_DEVICE ; do
+                echo "${READY_DEVICE}"
+                ${READY_DEVICE}
+            done
+    FORCE_SECURE=0;
+    if [ -f "/cryptkeys/boot/force_secure" ]; then
+        FORCE_SECURE=1;
+    fi
 
-
-
-# wait for the USB Key
-/sbin/modprobe usb-storage
-while [ ! -b /dev/sdb ];do
-    echo "Waiting for USB Key.";
-    echo 2 > /tmp/current_error_level
-    sleep 1 ;
-done
-echo 0 > /dev/error_led
-kill -9 $FLASH_ERROR
-################################################################################
-# wait until it mounts
-if [ ! -d /cryptkeys/boot ]; then mkdir -p /cryptkeys/boot; fi
-while [ ! -f /cryptkeys/boot/crypttab ]; do
-    /bin/mount -t ext2 /dev/sdb1 /cryptkeys/boot || echo "could not read /cryptkeys/boot/crypttab"
-done
-################################################################################
-# decrypt the compact flash
-/sbin/modprobe dm_mod
-
-/bin/cat /cryptkeys/boot/crypttab | \
-awk '{print "cryptsetup --key-file /cryptkeys"$3" luksOpen "$2" "$1}'| \
-    while read READY_DEVICE ; do
-            echo "${READY_DEVICE}"
-            ${READY_DEVICE}
-        done
-FORCE_SECURE=0;
-if [ -f "/cryptkeys/boot/force_secure" ]; then
-    FORCE_SECURE=1;
+    if [ -f /cryptkeys/boot/ip_static_config ]; then
+        cp /cryptkeys/boot/ip_static_config /dev/shm/ip_static_config
+    fi
+    
+    if [ -f /cryptkeys/boot/wifi_credentials ]; then
+        cp /cryptkeys/boot/wifi_credentials /dev/shm/wifi_credentials
+    fi
+    /bin/umount /cryptkeys/boot
 fi
 
-if [ -f /cryptkeys/boot/wifi_credentials ]; then
-    cp /cryptkeys/boot/wifi_credentials /dev/shm/wifi_credentials
-fi
-
-/bin/umount /cryptkeys/boot
 ################################################################################
 # wait until it's removed
 if [ ${FORCE_SECURE} -eq 1 ];then
