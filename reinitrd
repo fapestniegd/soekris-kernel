@@ -1,7 +1,7 @@
 #!/bin/bash
 KERNELVERSION=2.6.35.13-net5501
 (cd /var/cache/git/soekris-kernel/; git pull) ; 
-rsync -avzP /var/cache/git/soekris-kernel/initramfs-tools/scripts/ /etc/initramfs-tools/scripts/; 
+rsync -avzP /var/cache/git/soekris-kernel/initramfs-tools/ /etc/initramfs-tools/; 
 mkinitramfs -o /tmp/initrd.img-${KERNELVERSION} ${KERNELVERSION};
 [ -d /tmp/initrd.d ] && /bin/rm -fr /tmp/initrd.d; 
 mkdir /tmp/initrd.d; 
