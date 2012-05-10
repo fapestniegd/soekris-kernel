@@ -16,6 +16,8 @@ case $1 in
     ;;
 esac
 
+/bin/sh
+
 # Begin real processing below this line
 ################################################################################
 # module args
