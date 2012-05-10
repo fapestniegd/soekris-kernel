@@ -44,7 +44,7 @@ fi
 FLASH_ERROR=$!
 ################################################################################
 log_begin_msg "Starting root-on-crypt"
-/bin/sh
+
 # look for our one-time-reboot
 if [ ! -d /boot ] ;then mkdir -p /boot; fi
 mount | grep '/boot'
@@ -53,6 +53,7 @@ if [ $? -ne 0  ]; then
 fi
 if [ -f /boot/onetimepad ]; then 
   cryptsetup --key-file /boot/onetimepad luksOpen /dev/sda2 crypt_dev_sda2
+  umount /boot
 else
     # wait for the USB Key
     /sbin/modprobe usb-storage
