@@ -43,8 +43,13 @@ fi
 /scripts/flash_error &
 FLASH_ERROR=$!
 ################################################################################
-# wait for the USB Key
 log_begin_msg "Starting root-on-crypt"
+/bin/sh
+# look for our one-time-reboot
+
+
+
+# wait for the USB Key
 /sbin/modprobe usb-storage
 while [ ! -b /dev/sdb ];do
     echo "Waiting for USB Key.";
