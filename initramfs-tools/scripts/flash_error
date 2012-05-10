@@ -16,7 +16,7 @@ while [ 1 ];do
                 export COUNT=$(expr ${COUNT} + 1);
             fi
             echo $ERROR > /dev/error_led;
-            /scripts/millisleep 400
+            /scripts/millisleep 250
         done;
         echo 0 > /dev/error_led;
         sleep 3

@@ -41,6 +41,7 @@ else
 fi
 ################################################################################
 /scripts/flash_error &
+FLASH_ERROR=$!
 ################################################################################
 # wait for the USB Key
 log_begin_msg "Starting root-on-crypt"
@@ -51,6 +52,7 @@ while [ ! -b /dev/sdb ];do
     sleep 1 ;
 done
 echo 0 > /dev/error_led
+kill -9 $FLASH_ERROR
 ################################################################################
 # wait until it mounts
 if [ ! -d /cryptkeys/boot ]; then mkdir -p /cryptkeys/boot; fi
@@ -60,6 +62,7 @@ done
 ################################################################################
 # decrypt the compact flash
 /sbin/modprobe dm_mod
+
 /bin/cat /cryptkeys/boot/crypttab | \
 awk '{print "cryptsetup --key-file /cryptkeys"$3" luksOpen "$2" "$1}'| \
     while read READY_DEVICE ; do
@@ -79,11 +82,14 @@ fi
 ################################################################################
 # wait until it's removed
 if [ ${FORCE_SECURE} -eq 1 ];then
+    /scripts/flash_error &
+    FLASH_ERROR=$!
     while [ -b /dev/sdb ];do
         echo 3 > /tmp/current_error_level
         echo "Waiting for USB Key Removal.";
         sleep 1 ;
     done
+    kill -9 $FLASH_ERROR
 fi
 echo 0 > /dev/error_led
 ################################################################################
