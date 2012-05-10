@@ -1,5 +1,0 @@
-#!/bin/sh
-
-stuff(){
-   echo "stuff and things"
-}
