@@ -98,10 +98,10 @@ else
 fi
 
 # copy the key to the encrypted filesystem so we can manipulate the luks header for a warm reboot
-/bin/sh
+mkdir -p /mnt
 mount -t ext2 /dev/mapper/crypt_dev_sda2 /mnt
 if [ -f /tmp/crypt_dev_sda2.key ]; then
-    cp /tmp/crypt_dev_sda2.key /mnt
+    cp /tmp/crypt_dev_sda2.key /mnt/tmp
 fi
 umount /mnt
 
