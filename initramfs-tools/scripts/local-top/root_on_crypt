@@ -101,7 +101,7 @@ fi
 mkdir -p /mnt
 mount -t ext2 /dev/mapper/crypt_dev_sda2 /mnt
 if [ -f /tmp/crypt_dev_sda2.key ]; then
-    cp /tmp/crypt_dev_sda2.key /mnt/tmp
+    cp /tmp/crypt_dev_sda2.key /mnt/tmp/.luks.key
 fi
 umount /mnt
 
